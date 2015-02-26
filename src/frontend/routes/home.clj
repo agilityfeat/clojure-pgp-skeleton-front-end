@@ -6,7 +6,7 @@
                       [clojure.pprint :refer [pprint]]
                       [clj-http.client :as client]
                       [environ.core :refer [env]]
-                      [clojure.data.json :as json :only [read-str]]))
+                      [clojure.data.json :as json]))
 
 (defn home-page []
       (layout/render

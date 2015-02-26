@@ -22,7 +22,6 @@
   [:div
    [:div.page-header [:h1 "Signup"]]
    (text-input :username "Username")
-   (text-input :phrase "Passphrase")
    (text-area :public_key "Public key")])
 
 (defn save-doc [doc]
@@ -39,7 +38,7 @@
     (fn []
       [:div
        [bind-fields form doc
-        (fn [_ _ _] (swap! state assoc :saved? false) nil)]
+        (fn [_ _ _] (swap! state assoc :saved? false) nil)] 
        (if (:saved? @state)
          [:p "Saved"]
          [:button {:type "submit"
