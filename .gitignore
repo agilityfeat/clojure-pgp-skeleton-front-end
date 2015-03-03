@@ -8,3 +8,5 @@ pom.xml
 /.lein-*
 /.env
 *.log
+/.DS_Store
+/resources/public/.DS_Store
