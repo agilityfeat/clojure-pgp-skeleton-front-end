@@ -42,7 +42,8 @@
 ;;Signup form definition
 (def form
   [:div
-   [:div.page-header [:h2 "Signup form"]]
+   [:div.page-header [:h2 "Signup form: Step 1"]]
+   [:p "Please insert your username or e-mail and your public key."]
    (text-input :username "Username")
    (text-area :public_key "Public key (*)")
    [:p "(*) If you don't have a public key, you can generate one " [:a {:href "https://www.igolder.com/pgp/generate-key/" :target "_blank"} "here"]]])
@@ -74,8 +75,9 @@
   "Show the welcome page"
   []
   [:div 
-    [:div.page-header [:h2 "Welcome page"]]
-    [:p (:text @decrypted_message)]
+    [:div.page-header [:h2 "Signup form: Step 3"]]
+    [:p "Congratularions! This is your welcome page:"]
+    [:p [:strong (:text @decrypted_message)]]
   ])
 
 (defn decrypt-welcome-page 
@@ -99,8 +101,8 @@
       (if (:saved? @state)
         ;Welcome page form
         [:div
-         [:div.page-header [:h2 "Welcome page"]]
-         [:p "To view your welcome page, please insert your private key and passphrase:"]
+         [:div.page-header [:h2 "Signup form: Step 2"]]
+         [:p "To finish the signup and view your welcome page, please insert your private key and passphrase:"]
          [:div.alert.alert-danger.hide {:id "keyerror"} "Error"]
          [atom-text-input :passphrase "Passphrase" passphrase]
          [atom-text-area :private_key "Private key" private_key]
@@ -153,6 +155,7 @@
 
 (defn init! []
   (swap! state assoc :page home)
+  ;(.initializeTouchEvents js/React true)
   (reagent/render-component [navbar] (.getElementById js/document "navbar"))
   (reagent/render-component [page] (.getElementById js/document "app")))
 
