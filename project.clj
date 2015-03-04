@@ -69,12 +69,14 @@
    {:app
     {:source-paths ["src-cljs"],
      :compiler
-     {:output-dir "resources/public/js/out",
+     {:output-to "resources/public/js/app.js"
+      :optimizations :advanced
+      :pretty-print false
+      :output-wrapper false
+      ;;specify the externs file to protect function names
       :externs ["react/externs/react.js"],
-      :optimizations :none,
-      :output-to "resources/public/js/app.js",
-      :source-map "resources/public/js/out.js.map",
-      :pretty-print true}}}}
+      :closure-warnings {:non-standard-jsdoc :off}}
+     }}}
   :uberjar-name
   "frontend.jar"
   :min-lein-version "2.0.0")

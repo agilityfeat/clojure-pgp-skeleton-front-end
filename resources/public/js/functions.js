@@ -1,18 +1,18 @@
 //Decrypt message using OpenPGP.js
 function decrypt_message(privkey, passphrase, encoded_message) {
-	$("#keyerror").addClass("hide");
+	jQuery("#keyerror").addClass("hide");
     var openpgp = window.openpgp;
     var privKeys = openpgp.key.readArmored(privkey);
     var privKey = privKeys.keys[0];
     if(!privKey) {
-    	$("#keyerror").removeClass("hide");
-    	$("#keyerror").html("Error: your private key is wrong.");
+    	jQuery("#keyerror").removeClass("hide");
+    	jQuery("#keyerror").html("Error: your private key is wrong.");
     	return "";
     }
     var success = privKey.decrypt(passphrase);
     if(!success) {
-    	$("#keyerror").removeClass("hide");
-    	$("#keyerror").html("Error: your passphrase is wrong.");
+    	jQuery("#keyerror").removeClass("hide");
+    	jQuery("#keyerror").html("Error: your passphrase is wrong.");
     	return "";
     }
     var message = openpgp.message.readArmored(encoded_message);

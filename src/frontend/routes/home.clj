@@ -13,8 +13,6 @@
         "app.html" {:docs (util/md->html "/md/docs.md")}))
 
 ;This function sends all the form fields values to the User's microservice.
-;@TODO:
-;- Recieve the Welcome Page, and decrypt the message in client-side 
 (defn save-document [doc]
       (def signup_response
           (json/read-str (:body (client/post (env :ms-user-url) {:form-params (:doc doc)} :content-type :json))))
@@ -22,5 +20,6 @@
 
 (defroutes home-routes
   (GET "/" [] (home-page))
+  (GET "/about" [] (home-page))
   (POST "/save" {:keys [body-params]}
     (edn (save-document body-params))))

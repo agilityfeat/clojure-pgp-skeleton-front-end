@@ -4,6 +4,8 @@
             [reagent-forms.core :refer [bind-fields]]
             [ajax.core :refer [POST]])
   (:require-macros [secretary.core :refer [defroute]]))
+  
+
 
 ;;Declaration of atoms
 (def state (atom {:saved? false}))
@@ -12,11 +14,14 @@
 (def passphrase (atom ""))
 (def private_key (atom ""))
 
+
 ;;Definition of HTML functions
 (defn row [label & body]
   [:div.row
    [:div.col-md-2 [:span label]]
-   [:div.col-md-3 body]])
+   [:div.col-md-3 body]]) 
+
+
 
 (defn text-input [id label]
   (row label [:input.form-control {:field :text :id id}]))
@@ -51,7 +56,9 @@
                         (swap! state assoc :saved? true))})))
 
 
-(defn about []
+(defn about 
+  "About Section"
+  []
   [:div [:p "Walking Skeleton's User Story:"]
           [:p "As a final user I want to create an account with a PGP public key that I already possess so when the account is created the Welcome page is decrypted in the client side."]
           [:p "All the backend code must be in Clojure and it should use the Tesla microservices architecture from Otto."]
