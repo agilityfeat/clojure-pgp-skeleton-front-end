@@ -43,7 +43,7 @@
 (def form
   [:div
    [:div.page-header [:h2 "Signup form: Step 1"]]
-   [:p "Please insert your username or e-mail and your public key."]
+   [:p "Please enter your username or e-mail and your public key."]
    (text-input :username "Username")
    (text-area :public_key "Public key (*)")
    [:p "(*) If you don't have a public key, you can generate one " [:a {:href "https://www.igolder.com/pgp/generate-key/" :target "_blank"} "here"]]])
@@ -102,7 +102,7 @@
         ;Welcome page form
         [:div
          [:div.page-header [:h2 "Signup form: Step 2"]]
-         [:p "To finish the signup and view your welcome page, please insert your private key and passphrase:"]
+         [:p "To finish the signup and view your welcome page, please enter your private key and passphrase:"]
          [:div.alert.alert-danger.hide {:id "keyerror"} "Error"]
          [atom-text-input :passphrase "Passphrase" passphrase]
          [atom-text-area :private_key "Private key" private_key]
