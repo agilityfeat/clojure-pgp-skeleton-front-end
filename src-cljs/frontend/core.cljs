@@ -133,7 +133,18 @@
 (defn navbar []
   [:div.navbar.navbar-inverse.navbar-fixed-top
    [:div.container
-    [:div.navbar-header]
+    [:div.navbar-header
+      [:button  { :type "button"
+                  :class "navbar-toggle collapsed"
+                  :data-target ".navbar-collapse"
+                  :data-toggle "collapse"
+                }
+            [:span.sr-only "Toggle navigation"]
+            [:span.icon-bar]
+            [:span.icon-bar]
+            [:span.icon-bar]
+      ]
+    ]
     [:div.navbar-collapse.collapse
      [:ul.nav.navbar-nav
       [:li {:class (when (= home (:page @state)) "active")}

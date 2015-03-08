@@ -28,11 +28,7 @@
         var context = "{{servlet-context}}";
     </script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/react/0.11.2/react.min.js"></script>
-    {% if dev %}
-      {% script "/js/app.js" %}
-    {% else %}
-      {% script "/js/app.js" %}
-    {% endif %}
+    {% script "/js/app.js" %}
     {% script "/js/functions.js" %}
     {% script "/js/openpgp.min.js" %}
   </body>
