@@ -24,8 +24,7 @@
    [secretary "1.2.1"]
    [clj-http "1.0.1"]
    [org.clojure/data.json "0.2.5"]
-   [slingshot "0.12.2"]
-   [bk/ring-gzip "0.1.1"]]
+   [slingshot "0.12.2"]]
   :repl-options
   {:init-ns frontend.repl}
   :jvm-opts
