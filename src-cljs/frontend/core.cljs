@@ -39,7 +39,6 @@
   (row label [:textarea.form-control {:field :text 
                                       :id id :value @value 
                                       :on-change #(reset! value (-> % .-target .-value))}]))
-
 ;;Signup form definition
 (def form
   [:div
