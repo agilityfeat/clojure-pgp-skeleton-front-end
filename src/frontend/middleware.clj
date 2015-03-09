@@ -18,7 +18,8 @@
    wrap-gzip])
 
 (def production-middleware
-  [#(wrap-internal-error % :log (fn [e] (timbre/error e)))])
+  [#(wrap-internal-error % :log (fn [e] (timbre/error e)))
+   wrap-gzip])
 
 (defn load-middleware []
   (concat (when (env :dev) development-middleware)
