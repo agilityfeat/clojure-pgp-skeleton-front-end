@@ -54,7 +54,9 @@
           {:params {:doc @doc}
            :handler (fn [response] 
                         (swap! encrypted-message assoc :text response)
-                        (swap! state assoc :saved? true))})))
+                        (if-not (= "user-exists" (:text @encrypted-message))
+                            (swap! state assoc :saved? true)
+                            (js/alert "Sorry. A user with that username already exists.")))})))
 
 
 (defn about 
