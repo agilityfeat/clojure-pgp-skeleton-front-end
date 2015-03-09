@@ -63,7 +63,7 @@
     :injections
     [(require 'pjstadig.humane-test-output)
      (pjstadig.humane-test-output/activate!)],
-    :env {:dev true :ms-user-url "http://localhost:8081/signup"}}}
+    :env {:dev true :ms-user-url "http://localhost:8080/signup"}}}
   :cljsbuild
   {:builds
    {:app
