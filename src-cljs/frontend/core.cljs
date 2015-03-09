@@ -13,39 +13,48 @@
 (def decrypted_message (atom {:text ""}))
 (def passphrase (atom ""))
 (def private_key (atom ""))
-
+(def username (atom ""))
+(def public-key (atom ""))
 
 ;;Definition of HTML functions
-(defn row [label & body]
+(defn row 
+  "Return a html row"
+  [label & body]
   [:div.row
    [:div.col-md-2 [:span label]]
    [:div.col-md-3 body]]) 
 
+(defn text-input
+  "This function returns a complete text input field." 
+  [id label]
+  (row label [:input.form-control {:field :text :id id :required true}]))
 
-
-(defn text-input [id label]
-  (row label [:input.form-control {:field :text :id id}]))
-
-(defn atom-text-input [id label value]
+(defn atom-text-input 
+  "This function returns a complete text input field, using an atom value" 
+  [id label value]
   (row label [:input {:field :text
                       :id id 
                       :value @value
                       :on-change #(reset! value (-> % .-target .-value))}]))
 
-(defn text-area [id label]
+(defn text-area 
+  "This function returns a complete textarea field." 
+  [id label]
   (row label [:textarea.form-control {:field :text :id id}]))
 
-(defn atom-text-area [id label value]
+(defn atom-text-area 
+"This function returns a complete textarea field, usin an atom value" 
+  [id label value]
   (row label [:textarea.form-control {:field :text 
                                       :id id :value @value 
                                       :on-change #(reset! value (-> % .-target .-value))}]))
-;;Signup form definition
 (def form
+  "Signup form definition"
   [:div
    [:div.page-header [:h2 "Signup form: Step 1"]]
    [:p "Please enter your username or e-mail and your public key."]
-   (text-input :username "Username")
-   (text-area :public_key "Public key (*)")
+   [text-input :username "Username"]
+   [text-area :public_key "Public key (*)"]
    [:p "(*) If you don't have a public key, you can generate one " [:a {:href "https://www.igolder.com/pgp/generate-key/" :target "_blank"} "here"]]])
 
 (defn save-doc [doc]
@@ -57,7 +66,6 @@
                         (if-not (= "user-exists" (:text @encrypted-message))
                             (swap! state assoc :saved? true)
                             (js/alert "Sorry. A user with that username already exists.")))})))
-
 
 (defn about 
   "About Section"
@@ -72,15 +80,28 @@
           [:p "It should be a Responsive Design, mobile first."]
           [:p "Bonus: Install a second server with peerjs-server so two users provided by the Tesla microservice can say hello to each other via peerjs in a PGP encrypted way."]
           [:p "Bonus: Find a way to send a Pushover notification to an iPhone/Android when the account is created."]])
+(defn login 
+  "Log in section"
+  []
+  [:div [:p "Walking Skeleton's User Story:"]
+          [:p "As a final user I want to create an account with a PGP public key that I already possess so when the account is created the Welcome page is decrypted in the client side."]
+          [:p "All the backend code must be in Clojure and it should use the Tesla microservices architecture from Otto."]
+          [:p "All the Javascript code must be generated from ClojureScript"]
+          [:p "Use OpenPGPjs, particularly the minified build."]
+          [:p "The frontend must use React with Reagent following a Flux [or Reflux] architecture."]
+          [:p "Please consider using the Material implementation in React"]
+          [:p "It should be a Responsive Design, mobile first."]
+          [:p "Bonus: Install a second server with peerjs-server so two users provided by the Tesla microservice can say hello to each other via peerjs in a PGP encrypted way."]
+          [:p "Bonus: Find a way to send a Pushover notification to an iPhone/Android when the account is created."]])
+
 
 (defn welcome-page-component 
   "Show the welcome page"
   []
   [:div 
     [:div.page-header [:h2 "Signup form: Step 3"]]
-    [:p "Congratularions! This is your welcome page:"]
-    [:p [:strong (:text @decrypted_message)]]
-  ])
+    [:p "Congratulations! This is your welcome page:"]
+    [:p [:strong (:text @decrypted_message)]]])
 
 (defn decrypt-welcome-page 
   "Decrypt the welcome page with OpenPGP.js"
@@ -91,13 +112,21 @@
       (do 
         (
           (swap! decrypted_message assoc :text dec_msg)
-          (swap! state assoc :page welcome-page-component))
-        )  
-    )
-  )
-)
+          (swap! state assoc :page welcome-page-component))))))
 
-(defn home []
+(defn welcome-page-form-component [doc]
+  [:div.alert.alert-danger.hide {:id "keyerror"} "Error"]
+  [atom-text-input :passphrase "Passphrase" passphrase]
+  [atom-text-area :private_key "Private key" private_key]
+  [:button  { :type "button"
+               :class "btn btn-default"
+               :onClick (decrypt-welcome-page doc)
+              }
+      "Show my welcome page!"])
+
+(defn home 
+  "Draw the home component"
+  []
   (let [doc (atom {})]
     (fn []
       (if (:saved? @state)
@@ -105,34 +134,20 @@
         [:div
          [:div.page-header [:h2 "Signup form: Step 2"]]
          [:p "To finish the signup and view your welcome page, please enter your private key and passphrase:"]
-         [:div.alert.alert-danger.hide {:id "keyerror"} "Error"]
-         [atom-text-input :passphrase "Passphrase" passphrase]
-         [atom-text-area :private_key "Private key" private_key]
-         [:button  { :type "button"
-                     :class "btn btn-default"
-                     :onClick (decrypt-welcome-page doc)
-                    }
-            "Show my welcome page!"
-          ]
-        ]
+         (welcome-page-form-component doc)]
         ;Signup page form
         [:div
           [bind-fields form doc
-            (fn [_ _ _] (swap! state assoc :saved? false) nil)
-          ]
+            (fn [_ _ _] (swap! state assoc :saved? false) nil)]
           [:button  {:type "submit"
                      :class "btn btn-default"
-                     :onClick (save-doc doc)
-                    }
-            "Submit"
-          ]
-        ]
-      )
-    )
-  )
-)
+                     :onClick (save-doc doc)}
+            "Submit"]
+          [:p "Already have an account? " [:a {:on-click #(secretary/dispatch! "#/login")} "Log in"]]]))))
 
-(defn navbar []
+(defn navbar 
+  "Draw the nav bar component"
+  []
   [:div.navbar.navbar-inverse.navbar-fixed-top
    [:div.container
     [:div.navbar-header
@@ -150,7 +165,9 @@
     [:div.navbar-collapse.collapse
      [:ul.nav.navbar-nav
       [:li {:class (when (= home (:page @state)) "active")}
-       [:a {:on-click #(secretary/dispatch! "#/")} "Signup User account"]]
+       [:a {:on-click #(secretary/dispatch! "#/")} "Sign up"]]
+      [:li {:class (when (= login (:page @state)) "active")}
+       [:a {:on-click #(secretary/dispatch! "#/login")} "Log in"]] 
       [:li {:class (when (= about (:page @state)) "active")}
        [:a {:on-click #(secretary/dispatch! "#/about")} "About"]]]]]])
 
@@ -164,6 +181,7 @@
           (reset! private_key "")
           (swap! state assoc :saved? false)
           (swap! state assoc :page home))
+(defroute "/login" [] (swap! state assoc :page login))
 (defroute "/about" [] (swap! state assoc :page about))
 
 (defn init! []
