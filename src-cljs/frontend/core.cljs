@@ -55,7 +55,7 @@
    [:p "Please enter your username or e-mail and your public key."]
    (text-input :username "Username")
    (text-area :public_key "Public key (*)")
-   [:p "(*) If you don't have a public key, you can generate one " [:a {:href "https://www.igolder.com/pgp/generate-key/" :target "_blank"} "here"]]])
+   [:p "(*) If you don't have a public key, you can generate one " [:a {:href "http://www.igolder.com/pgp/generate-key/" :target "_blank"} "here"]]])
 
 (def form-login
   [:div
@@ -76,13 +76,13 @@
 
 (defn login-doc [doc]
   (fn []
+    (reset! username (:username @doc))  
     (POST (str js/context "/login")
           {:params {:doc @doc}
            :handler (fn [response] 
                         (swap! encrypted-message assoc :text response)
                         (if-not (= "user-not-exists" (:text @encrypted-message))
-                            (do ((swap! state assoc :saved? true)
-                                 (session/put! :logged true)))
+                            (swap! state assoc :saved? true)
                             (js/alert "Sorry. The user with that username not exists.")))})))
 
 (defn about 
@@ -116,7 +116,8 @@
       (do 
         (
           (swap! decrypted_message assoc :text dec_msg)
-          (swap! state assoc :page welcome-page-component))))))
+          (swap! state assoc :page welcome-page-component)
+          (session/put! :logged true))))))
 
 (defn welcome-page-form-component [doc]
   [:div 
@@ -169,11 +170,11 @@
                      :class "btn btn-default"
                      :onClick (login-doc doc)}
             "Submit"]]))))
-
-(defn user-link []
-    [:li {:class (when-not (session/get :logged) "hide")}
-      "german@pruebas.com" [:a {:on-click #(secretary/dispatch! "#/")} "[logout]"]]
-  )
+(defn logout []
+    (if (js/confirm "Are you sure?")
+        (do
+          ((session/put! :logged false)
+           (secretary/dispatch! "#/")))))
 
 (defn navbar 
   "Draw the nav bar component"
@@ -194,12 +195,33 @@
     ]
     [:div.navbar-collapse.collapse
      [:ul.nav.navbar-nav
-      [user-link]
-      [:li {:class (when (= home (:page @state)) "active") :data-target ".navbar-collapse" :data-toggle "collapse"}
-       [:a {:on-click #(secretary/dispatch! "#/")} "Sign up"]]
-      [:li {:class (when (= login (:page @state)) "active") :data-target ".navbar-collapse" :data-toggle "collapse"}
+      [:li {:class (str 
+                      (when (= welcome-page-component (:page @state)) "active") 
+                      (when-not (session/get :logged) " hide"))
+            :data-target ".navbar-collapse" 
+            :data-toggle "collapse"}
+        [:a {:on-click #(secretary/dispatch! "#/welcome-page")} "Home"]]
+
+      [:li {:class (when-not (session/get :logged) "hide")}
+        [:a {:on-click #(logout)} "Log out"]]
+
+      [:li {:class (str 
+                      (when (= home (:page @state)) "active") 
+                      (when (session/get :logged) " hide"))
+            :data-target ".navbar-collapse" 
+            :data-toggle "collapse"}
+       [:a {:on-click #(secretary/dispatch! "#/")} "Home"]]
+
+      [:li {:class (str 
+                      (when (= login (:page @state)) "active") 
+                      (when (session/get :logged) " hide"))
+            :data-target ".navbar-collapse" 
+            :data-toggle "collapse"}
        [:a {:on-click #(secretary/dispatch! "#/login")} "Log in"]] 
-      [:li {:class (when (= about (:page @state)) "active") :data-target ".navbar-collapse" :data-toggle "collapse"}
+
+      [:li {:class (when (= about (:page @state)) "active") 
+            :data-target ".navbar-collapse" 
+            :data-toggle "collapse"}
        [:a {:on-click #(secretary/dispatch! "#/about")} "About"]]]]]])
 
 (defn page []
@@ -218,6 +240,8 @@
           (swap! state assoc :saved? false)
           (swap! state assoc :page login))
 (defroute "/about" [] (swap! state assoc :page about))
+(defroute "/welcome-page" [] (swap! state assoc :page welcome-page-component))
+
 
 (defn init! []
   (swap! state assoc :page home)

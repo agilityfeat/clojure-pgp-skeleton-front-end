@@ -19,6 +19,8 @@
    [org.clojure/clojure "1.6.0"]
    [environ "1.0.0"]
    [ring-server "0.3.1"]
+   [ring/ring-defaults "0.1.3"]
+   [ring/ring-session-timeout "0.1.0"]
    [reagent-forms "0.2.9"]
    [reagent-utils "0.1.2"]
    [mvxcvi/clj-pgp "0.8.0"]
