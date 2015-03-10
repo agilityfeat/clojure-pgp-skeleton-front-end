@@ -43,19 +43,24 @@
   (row label [:textarea.form-control {:field :text :id id}]))
 
 (defn atom-text-area 
-"This function returns a complete textarea field, usin an atom value" 
+"This function returns a complete textarea field, using an atom value" 
   [id label value]
   (row label [:textarea.form-control {:field :text 
                                       :id id :value @value 
                                       :on-change #(reset! value (-> % .-target .-value))}]))
 (def form
-  "Signup form definition"
   [:div
    [:div.page-header [:h2 "Signup form: Step 1"]]
    [:p "Please enter your username or e-mail and your public key."]
-   [text-input :username "Username"]
-   [text-area :public_key "Public key (*)"]
+   (text-input :username "Username")
+   (text-area :public_key "Public key (*)")
    [:p "(*) If you don't have a public key, you can generate one " [:a {:href "https://www.igolder.com/pgp/generate-key/" :target "_blank"} "here"]]])
+
+(def form-login
+  [:div
+   [:div.page-header [:h2 "Login form: Step 1"]]
+   [:p "Please enter your username or e-mail"]
+   (text-input :username "Username")])
 
 (defn save-doc [doc]
   (fn []
@@ -67,10 +72,20 @@
                             (swap! state assoc :saved? true)
                             (js/alert "Sorry. A user with that username already exists.")))})))
 
+(defn login-doc [doc]
+  (fn []
+    (POST (str js/context "/login")
+          {:params {:doc @doc}
+           :handler (fn [response] 
+                        (swap! encrypted-message assoc :text response)
+                        (if-not (= "user-not-exists" (:text @encrypted-message))
+                            (swap! state assoc :saved? true)
+                            (js/alert "Sorry. The user with that username not exists.")))})))
+
 (defn about 
   "About Section"
   []
-  [:div [:p "Walking Skeleton's User Story:"]
+  [:div [:h2 "Walking Skeleton's User Story:"]
           [:p "As a final user I want to create an account with a PGP public key that I already possess so when the account is created the Welcome page is decrypted in the client side."]
           [:p "All the backend code must be in Clojure and it should use the Tesla microservices architecture from Otto."]
           [:p "All the Javascript code must be generated from ClojureScript"]
@@ -80,26 +95,12 @@
           [:p "It should be a Responsive Design, mobile first."]
           [:p "Bonus: Install a second server with peerjs-server so two users provided by the Tesla microservice can say hello to each other via peerjs in a PGP encrypted way."]
           [:p "Bonus: Find a way to send a Pushover notification to an iPhone/Android when the account is created."]])
-(defn login 
-  "Log in section"
-  []
-  [:div [:p "Walking Skeleton's User Story:"]
-          [:p "As a final user I want to create an account with a PGP public key that I already possess so when the account is created the Welcome page is decrypted in the client side."]
-          [:p "All the backend code must be in Clojure and it should use the Tesla microservices architecture from Otto."]
-          [:p "All the Javascript code must be generated from ClojureScript"]
-          [:p "Use OpenPGPjs, particularly the minified build."]
-          [:p "The frontend must use React with Reagent following a Flux [or Reflux] architecture."]
-          [:p "Please consider using the Material implementation in React"]
-          [:p "It should be a Responsive Design, mobile first."]
-          [:p "Bonus: Install a second server with peerjs-server so two users provided by the Tesla microservice can say hello to each other via peerjs in a PGP encrypted way."]
-          [:p "Bonus: Find a way to send a Pushover notification to an iPhone/Android when the account is created."]])
-
 
 (defn welcome-page-component 
   "Show the welcome page"
   []
   [:div 
-    [:div.page-header [:h2 "Signup form: Step 3"]]
+    [:div.page-header [:h2 "Welcome page"]]
     [:p "Congratulations! This is your welcome page:"]
     [:p [:strong (:text @decrypted_message)]]])
 
@@ -115,14 +116,15 @@
           (swap! state assoc :page welcome-page-component))))))
 
 (defn welcome-page-form-component [doc]
-  [:div.alert.alert-danger.hide {:id "keyerror"} "Error"]
-  [atom-text-input :passphrase "Passphrase" passphrase]
-  [atom-text-area :private_key "Private key" private_key]
-  [:button  { :type "button"
-               :class "btn btn-default"
-               :onClick (decrypt-welcome-page doc)
-              }
-      "Show my welcome page!"])
+  [:div 
+    [:div.alert.alert-danger.hide {:id "keyerror"} "Error"]
+    [atom-text-input :passphrase "Passphrase" passphrase]
+    [atom-text-area :private_key "Private key" private_key]
+    [:button  { :type "button"
+                 :class "btn btn-default"
+                 :onClick (decrypt-welcome-page doc)
+                }
+        "Show my welcome page!"]])
 
 (defn home 
   "Draw the home component"
@@ -134,7 +136,7 @@
         [:div
          [:div.page-header [:h2 "Signup form: Step 2"]]
          [:p "To finish the signup and view your welcome page, please enter your private key and passphrase:"]
-         (welcome-page-form-component doc)]
+         [welcome-page-form-component doc]]
         ;Signup page form
         [:div
           [bind-fields form doc
@@ -144,6 +146,26 @@
                      :onClick (save-doc doc)}
             "Submit"]
           [:p "Already have an account? " [:a {:on-click #(secretary/dispatch! "#/login")} "Log in"]]]))))
+
+(defn login 
+  "Draw the login component"
+  []
+  (let [doc (atom {})]
+    (fn []
+      (if (:saved? @state)
+        ;Welcome page form
+        [:div
+         [:div.page-header [:h2 "Login form: Step 2"]]
+         [:p "Please enter your private key and passphrase:"]
+         [welcome-page-form-component doc]]
+        ;Login page form
+        [:div
+          [bind-fields form-login doc
+            (fn [_ _ _] (swap! state assoc :saved? false) nil)]
+          [:button  {:type "submit"
+                     :class "btn btn-default"
+                     :onClick (login-doc doc)}
+            "Submit"]]))))
 
 (defn navbar 
   "Draw the nav bar component"
@@ -181,7 +203,11 @@
           (reset! private_key "")
           (swap! state assoc :saved? false)
           (swap! state assoc :page home))
-(defroute "/login" [] (swap! state assoc :page login))
+(defroute "/login" [] 
+          (reset! passphrase  "")
+          (reset! private_key "")
+          (swap! state assoc :saved? false)
+          (swap! state assoc :page login))
 (defroute "/about" [] (swap! state assoc :page about))
 
 (defn init! []
