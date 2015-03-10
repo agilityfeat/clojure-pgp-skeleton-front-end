@@ -99,7 +99,10 @@
            :handler (fn [response] 
                         (swap! encrypted-message assoc :text response)
                         (if-not (= "user-not-exists" (:text @encrypted-message))
-                            (swap! state assoc :saved? true)
+                            (do
+                              (reset! show-errors? false)
+                              (swap! state assoc :saved? true))
+                            
                             (js/alert "Sorry. The user with that username not exists.")))}))))
 
 (defn about 
@@ -128,13 +131,17 @@
   "Decrypt the welcome page with OpenPGP.js"
   [doc]
   (fn []
-    (def dec_msg (js/decrypt_message @private_key @passphrase (:text @encrypted-message)))
-    (if-not (empty? dec_msg)
-      (do 
-        (
-          (swap! decrypted_message assoc :text dec_msg)
-          (swap! state assoc :page welcome-page-component)
-          (session/put! :logged true))))))
+    (reset! show-errors? true)
+    (if-not (or (empty? (trim @private_key)) (empty? (trim @passphrase)))
+      (do
+        (def dec_msg (js/decrypt_message @private_key @passphrase (:text @encrypted-message)))
+        (if-not (empty? dec_msg)
+          (do 
+            (
+              (swap! decrypted_message assoc :text dec_msg)
+              (swap! state assoc :page welcome-page-component)
+              (session/put! :logged true))))))))
+      
 
 (defn welcome-page-form-component [doc]
   [:div 
