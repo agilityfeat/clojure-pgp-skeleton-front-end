@@ -4,6 +4,7 @@
             [reagent-forms.core :refer [bind-fields]]
             [reagent.session :as session]
             [ajax.core :refer [POST]])
+  (:use [clojure.string :only [trim]])
   (:require-macros [secretary.core :refer [defroute]]))
   
 
@@ -16,8 +17,17 @@
 (def private_key (atom ""))
 (def username (atom ""))
 (def public-key (atom ""))
+(def show-errors? (atom false))
+(def user-login-error? (atom false))
 
 ;;Definition of HTML functions
+
+(defn show-error-class [value]
+    (if (= false @show-errors?) 
+        false 
+        (empty? (trim @value))
+    )
+  )
 (defn row 
   "Return a html row"
   [label & body]
@@ -33,10 +43,12 @@
 (defn atom-text-input 
   "This function returns a complete text input field, using an atom value" 
   [id label value]
-  (row label [:input {:field :text
-                      :id id 
-                      :value @value
-                      :on-change #(reset! value (-> % .-target .-value))}]))
+  (row label [:input.form-control {:field :text
+                                   :required true
+                                   :id id 
+                                   :value @value
+                                   :on-change #(reset! value (-> % .-target .-value))}]
+             [:span.error {:class (when-not (show-error-class value) "hide")} "This field is required"]))
 
 (defn text-area 
   "This function returns a complete textarea field." 
@@ -48,42 +60,47 @@
   [id label value]
   (row label [:textarea.form-control {:field :text 
                                       :id id :value @value 
-                                      :on-change #(reset! value (-> % .-target .-value))}]))
+                                      :on-change #(reset! value (-> % .-target .-value))}]
+            [:span.error {:class (when-not (show-error-class value) "hide")} "This field is required"]))
 (def form
   [:div
    [:div.page-header [:h2 "Signup form: Step 1"]]
    [:p "Please enter your username or e-mail and your public key."]
-   (text-input :username "Username")
-   (text-area :public_key "Public key (*)")
+   [atom-text-input :username "Username" username]
+   [atom-text-area :public_key "Public key (*)" public-key]
    [:p "(*) If you don't have a public key, you can generate one " [:a {:href "http://www.igolder.com/pgp/generate-key/" :target "_blank"} "here"]]])
 
 (def form-login
   [:div
    [:div.page-header [:h2 "Login form: Step 1"]]
    [:p "Please enter your username or e-mail"]
-   (text-input :username "Username")])
+   [atom-text-input :username "Username" username]])
 
 (defn save-doc [doc]
   (fn []
-    (POST (str js/context "/save")
-          {:params {:doc @doc}
+    (reset! show-errors? true)  
+    (if-not (or (empty? (trim @username)) (empty? (trim @public-key)) )
+      (POST (str js/context "/save")
+          {:params {:doc {:username @username :public_key @public-key}}
            :handler (fn [response] 
                         (swap! encrypted-message assoc :text response)
-
                         (if-not (= "user-exists" (:text @encrypted-message))
-                            (swap! state assoc :saved? true)
-                            (js/alert "Sorry. A user with that username already exists.")))})))
+                            (do
+                              (swap! state assoc :saved? true)
+                              (reset! show-errors? false))
+                              (js/alert "Sorry. A user with that username already exists.")))}))))
 
 (defn login-doc [doc]
-  (fn []
-    (reset! username (:username @doc))  
-    (POST (str js/context "/login")
-          {:params {:doc @doc}
+  (fn []    
+    (reset! show-errors? true)  
+    (if-not (empty? (trim @username))
+      (POST (str js/context "/login")
+          {:params {:doc {:username @username} }
            :handler (fn [response] 
                         (swap! encrypted-message assoc :text response)
                         (if-not (= "user-not-exists" (:text @encrypted-message))
                             (swap! state assoc :saved? true)
-                            (js/alert "Sorry. The user with that username not exists.")))})))
+                            (js/alert "Sorry. The user with that username not exists.")))}))))
 
 (defn about 
   "About Section"
@@ -229,16 +246,19 @@
 
 (secretary/set-config! :prefix "#")
 
+(defn reset-atoms [section]
+    (reset! passphrase  "")
+    (reset! private_key "")
+    (reset! username "")
+    (reset! public-key "")
+    (reset! show-errors? false)
+    (swap! state assoc :saved? false)
+    (swap! state assoc :page section))
+
 (defroute "/" []
-          (reset! passphrase  "")
-          (reset! private_key "")
-          (swap! state assoc :saved? false)
-          (swap! state assoc :page home))
+          (reset-atoms home))
 (defroute "/login" [] 
-          (reset! passphrase  "")
-          (reset! private_key "")
-          (swap! state assoc :saved? false)
-          (swap! state assoc :page login))
+          (reset-atoms login))
 (defroute "/about" [] (swap! state assoc :page about))
 (defroute "/welcome-page" [] (swap! state assoc :page welcome-page-component))
 
