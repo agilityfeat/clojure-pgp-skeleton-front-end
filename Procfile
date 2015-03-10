@@ -1,1 +1,1 @@
-web: lein with-profile production trampoline ring server $PORT
+web: java $JVM_OPTS -jar target/frontend.jar -m frontend.server
