@@ -20,6 +20,7 @@
    [environ "1.0.0"]
    [ring-server "0.3.1"]
    [reagent-forms "0.2.9"]
+   [reagent-utils "0.1.2"]
    [mvxcvi/clj-pgp "0.8.0"]
    [secretary "1.2.1"]
    [clj-http "1.0.1"]

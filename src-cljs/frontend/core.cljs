@@ -2,6 +2,7 @@
   (:require [reagent.core :as reagent :refer [atom]]
             [secretary.core :as secretary]
             [reagent-forms.core :refer [bind-fields]]
+            [reagent.session :as session]
             [ajax.core :refer [POST]])
   (:require-macros [secretary.core :refer [defroute]]))
   
@@ -68,6 +69,7 @@
           {:params {:doc @doc}
            :handler (fn [response] 
                         (swap! encrypted-message assoc :text response)
+
                         (if-not (= "user-exists" (:text @encrypted-message))
                             (swap! state assoc :saved? true)
                             (js/alert "Sorry. A user with that username already exists.")))})))
@@ -79,7 +81,8 @@
            :handler (fn [response] 
                         (swap! encrypted-message assoc :text response)
                         (if-not (= "user-not-exists" (:text @encrypted-message))
-                            (swap! state assoc :saved? true)
+                            (do ((swap! state assoc :saved? true)
+                                 (session/put! :logged true)))
                             (js/alert "Sorry. The user with that username not exists.")))})))
 
 (defn about 
@@ -167,6 +170,11 @@
                      :onClick (login-doc doc)}
             "Submit"]]))))
 
+(defn user-link []
+    [:li {:class (when-not (session/get :logged) "hide")}
+      "german@pruebas.com" [:a {:on-click #(secretary/dispatch! "#/")} "[logout]"]]
+  )
+
 (defn navbar 
   "Draw the nav bar component"
   []
@@ -186,11 +194,12 @@
     ]
     [:div.navbar-collapse.collapse
      [:ul.nav.navbar-nav
-      [:li {:class (when (= home (:page @state)) "active")}
+      [user-link]
+      [:li {:class (when (= home (:page @state)) "active") :data-target ".navbar-collapse" :data-toggle "collapse"}
        [:a {:on-click #(secretary/dispatch! "#/")} "Sign up"]]
-      [:li {:class (when (= login (:page @state)) "active")}
+      [:li {:class (when (= login (:page @state)) "active") :data-target ".navbar-collapse" :data-toggle "collapse"}
        [:a {:on-click #(secretary/dispatch! "#/login")} "Log in"]] 
-      [:li {:class (when (= about (:page @state)) "active")}
+      [:li {:class (when (= about (:page @state)) "active") :data-target ".navbar-collapse" :data-toggle "collapse"}
        [:a {:on-click #(secretary/dispatch! "#/about")} "About"]]]]]])
 
 (defn page []
