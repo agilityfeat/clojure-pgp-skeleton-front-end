@@ -6,10 +6,10 @@
             [ajax.core :refer [POST]])
   (:use [clojure.string :only [trim]])
   (:require-macros [secretary.core :refer [defroute]]))
-  
 
 
-;;Declaration of atoms
+;; -------------------------
+;; Declaration of atoms
 (def state (atom {:saved? false}))
 (def encrypted-message (atom {:text ""}))
 (def decrypted_message (atom {:text ""}))
@@ -20,25 +20,31 @@
 (def show-errors? (atom false))
 (def user-login-error? (atom false))
 
-;;Definition of HTML functions
+;; -------------------------
+;; Reset all atoms
+(defn reset-atoms [section]
+    (reset! passphrase  "")
+    (reset! private_key "")
+    (reset! username "")
+    (reset! public-key "")
+    (reset! show-errors? false)
+    (swap! state assoc :saved? false)
+    (swap! state assoc :page section))
+
+;; -------------------------
+;; HTML components
 
 (defn show-error-class [value]
     (if (= false @show-errors?) 
         false 
-        (empty? (trim @value))
-    )
-  )
+        (empty? (trim @value))))
+
 (defn row 
   "Return a html row"
   [label & body]
   [:div.row
    [:div.col-md-2 [:span label]]
    [:div.col-md-3 body]]) 
-
-(defn text-input
-  "This function returns a complete text input field." 
-  [id label]
-  (row label [:input.form-control {:field :text :id id :required true}]))
 
 (defn atom-text-input 
   "This function returns a complete text input field, using an atom value" 
@@ -49,11 +55,6 @@
                                    :value @value
                                    :on-change #(reset! value (-> % .-target .-value))}]
              [:span.error {:class (when-not (show-error-class value) "hide")} "This field is required"]))
-
-(defn text-area 
-  "This function returns a complete textarea field." 
-  [id label]
-  (row label [:textarea.form-control {:field :text :id id}]))
 
 (defn atom-text-area 
 "This function returns a complete textarea field, using an atom value" 
@@ -253,15 +254,8 @@
 
 (secretary/set-config! :prefix "#")
 
-(defn reset-atoms [section]
-    (reset! passphrase  "")
-    (reset! private_key "")
-    (reset! username "")
-    (reset! public-key "")
-    (reset! show-errors? false)
-    (swap! state assoc :saved? false)
-    (swap! state assoc :page section))
-
+;; -------------------------
+;; Defroutes
 (defroute "/" []
           (reset-atoms home))
 (defroute "/login" [] 
@@ -269,10 +263,10 @@
 (defroute "/about" [] (swap! state assoc :page about))
 (defroute "/welcome-page" [] (swap! state assoc :page welcome-page-component))
 
-
+;; -------------------------
+;; Init render functions
 (defn init! []
   (swap! state assoc :page home)
-  ;(.initializeTouchEvents js/React true)
   (reagent/render-component [navbar] (.getElementById js/document "navbar"))
   (reagent/render-component [page] (.getElementById js/document "app")))
 
